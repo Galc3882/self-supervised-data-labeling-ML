@@ -3,6 +3,8 @@ A self-supervised data labeling ML YoloX with multi-GPU training and automatic h
 # Introduction
 I completed the Intro to Deep Learning with PyTorch and Intro To Self Driving Cars Nanodegree by Udacity on August 9th, 2022. I had the opportunity to sharpen my Python skills and apply C++ while implementing matrices and calculus in code. Additionally, I was able to touch on computer vision and machine learning all in the context of solving self-driving car problems.
 
+![k;j](https://user-images.githubusercontent.com/86870298/183752079-14f63e23-31ed-4200-aea0-d924909e9557.png)
+
 # Self Supervised Data Labeling
 I created a method...
 
