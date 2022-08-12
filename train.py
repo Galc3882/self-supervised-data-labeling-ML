@@ -1,19 +1,14 @@
 import os
 import re
-import sys
 import cv2
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import progressbar
+import multiprocessing as mp
 
-from sklearn.decomposition import PCA
 from sklearn.model_selection import train_test_split
 from sklearn.utils import resample
-from sklearn.metrics import classification_report
-from sklearn.linear_model import LogisticRegression
-from sklearn.svm import SVC
-from sklearn.tree import DecisionTreeClassifier
 
 
 def getAnnotationDataframe():
@@ -75,20 +70,35 @@ def showDataset(df):
     """
     Show dataset distribution
     """
+    color_map = {target_classes[0]: 'green',
+                 target_classes[1]: 'red', target_classes[2]: 'yellow'}
     index, counts = np.unique(df['target'], return_counts=True)
     colors = [color_map[target] for target in index]
     plt.bar(index, counts, color=colors)
-    print(df['target'].value_counts())
+    plt.title('Dataset distribution')
+
+    # print the number of images for each label and the total number of images and precentage of each label
+    for i in range(len(index)):
+        print(index[i], ':', counts[i], 'images')
+    print('Percentage of:', index[0], ':', round(
+        counts[0]/np.sum(counts)*100, 2), '%')
+    print('Percentage of:', index[1], ':', round(
+        counts[1]/np.sum(counts)*100, 2), '%')
+    print('Percentage of:', index[2], ':', round(
+        counts[2]/np.sum(counts)*100, 2), '%')
+    print('Total:', np.sum(counts), 'images')
+
     plt.show()
 
 
-def crop(img, row):
+def crop(row):
     """
-    Crop image
+    load image from path, change from BGR to RGB and crop it
     """
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img = cv2.cvtColor(cv2.imread(
+        row['image_path']+row['filename']), cv2.COLOR_BGR2RGB)
     img = img[row['y1']:row['y2'], row['x1']:row['x2']]
-    # img = cv2.resize(img, (64, 64))
+    img = cv2.resize(img, (30, 50))
     return img
 
 
@@ -100,55 +110,70 @@ def imagesCrop(df):
     pbar = progressbar.ProgressBar(maxval=len(df), widgets=["Cropping images: ", progressbar.Percentage(
     ), " ", progressbar.Bar(), " ", progressbar.ETA()]).start()
 
-    # save cropped images in a dictionary for each label
-    imgs = dict()
-    for i, row in df.iterrows():
-        pbar.update(i)
-        img = cv2.imread(row['image_path']+row['filename'])
-        img = crop(img, row)
-        if row['target'] not in imgs:
-            imgs[row['target']] = list()
-        imgs[row['target']].append(img)
+    # multiprocessing to speed up the process of cropping images
+    pool = mp.Pool()
+    results = pool.imap(crop, [x[1] for x in list(df.iterrows())])
+
+    # wait for the process to finish
+    while results._length == None:
+        pbar.update(results._index)
     pbar.finish()
-    return imgs
+    pool.close()
+
+    arr = np.empty((len(df), 50, 30, 3), dtype=np.uint8)
+    for i, img in enumerate(results):
+        arr[i] = img
+
+    # return a list of images and a list of labels
+    return arr, list(df['target'])
 
 
-def showRandomImage(imgs):
+def showRandomImages(imgs, labels):
     """
-    Show a set of random images from each label in dataset
+    Show a set of random images from each label in dataset in a 3x3 grid
     """
-    _, ax = plt.subplots(1, 3)
-    for i, target in enumerate(target_classes):
-        ax[i].imshow(imgs[target][np.random.randint(0, len(imgs[target]))])
-        ax[i].set_title(target)
+    # number of images to show from each label
+    n = 3
+
+    # get a list of random indexes for each label
+    indexes = [np.random.choice(np.where(np.array(labels) == label)[
+                                0], n, replace=False) for label in target_classes]
+
+    # show the images
+    for i in range(n):
+        for j in range(len(target_classes)):
+            plt.subplot(n, len(target_classes), i*len(target_classes)+j+1)
+            plt.imshow(imgs[indexes[j][i]])
+            if i == 0:
+                plt.title(target_classes[j])
+            plt.axis('off')
+            plt.axis("tight")
+            plt.axis("image")
     plt.show()
 
 
-def relabelImages(df):
+def relabelImages(imgs):
     """
     Relabel images to be used in training
     return a list of labels
     """
     # init the progress bar
-    pbar = progressbar.ProgressBar(maxval=len(df), widgets=["Relabeling images: ", progressbar.Percentage(
+    pbar = progressbar.ProgressBar(maxval=len(imgs), widgets=["Relabeling images: ", progressbar.Percentage(
     ), " ", progressbar.Bar(), " ", progressbar.ETA()]).start()
 
-    # relabel images
-    labels = list()
-    for i, row in df.iterrows():
-        pbar.update(i)
-        img = cv2.imread(row['image_path']+row['filename'])
-        img = crop(img, row)
-        label = relabel(img)
-        if label != row['target']:
-            print('labels incorrect', ' label: ',
-                  label, ' target: ', row['target'])
-            relabel(img, show=True)
-        labels.append(label)
-    pbar.finish()
-    return labels
+    # multiprocessing to speed up the process of relabeling
+    pool = mp.Pool()
+    labels = pool.imap(relabel, imgs)
 
-#cv2.cvtColor(np.uint8([[[255,255,255 ]]]),cv2.COLOR_RGB2HSV)
+    # wait for the process to finish
+    while labels._length == None:
+        pbar.update(labels._index)
+    pbar.finish()
+    pool.close()
+
+    return list(labels)
+
+
 def relabel(img, show=False):
     """
     give a label to an image
@@ -201,11 +226,11 @@ def relabel(img, show=False):
     # check which mask has the most pixels and if red is at the top, yellow in the middle and green at the bottom
     # ! np.sum(green_mask) > np.sum(red_mask) and np.sum(green_mask) > np.sum(yellow_mask) and
     if np.sum(green_mask[int(len(green_mask)*(2/3)):, :]) > np.sum(red_mask[0:int(len(red_mask)*(1/3)), :]) and np.sum(green_mask[int(len(green_mask)*(2/3)):, :]) > np.sum(yellow_mask[int(len(yellow_mask)*(1/9)):int(len(yellow_mask)*(8/9)), :]):
-        return 'go'
+        return 'go'  # green
     elif np.sum(yellow_mask[int(len(yellow_mask)*(1/9)):int(len(yellow_mask)*(8/9)), :]) > np.sum(green_mask[int(len(green_mask)*(2/3)):, :]) and np.sum(yellow_mask[int(len(yellow_mask)*(1/9)):int(len(yellow_mask)*(8/9)), :]) > np.sum(red_mask[0:int(len(red_mask)*(1/3)), :]):
-        return 'warning'
+        return 'warning'  # yellow
     else:
-        return 'stop'
+        return 'stop'  # red
 
 
 def compareLabels(recalculatedLabels, originalLabels):
@@ -231,11 +256,10 @@ def compareLabels(recalculatedLabels, originalLabels):
 
 
 if __name__ == '__main__':
+    # ! cv2.cvtColor(np.uint8([[[255,255,255 ]]]),cv2.COLOR_RGB2HSV)
+
     # initialize parameters
     target_classes = ['go', 'stop', 'warning']
-    color_map = {'go': 'green', 'stop': 'red', 'warning': 'yellow'}
-    rgb_color_map = {'go': (0, 255, 0), 'stop': (
-        255, 0, 0), 'warning': (255, 255, 0)}
 
     # initialize hyperparameters
     # TODO: init hyperparameters
@@ -243,36 +267,33 @@ if __name__ == '__main__':
     # get annotation dataframe
     annotationDf = getAnnotationDataframe()
 
-    # # decrease dataset size while keeping the same distribution and ratios
-    # # TODO: delete this part later
+    # decrease dataset size while keeping the same distribution and ratios
+    # TODO: delete this part later
     annotationDf = resample(annotationDf, n_samples=1000,
                             random_state=42).reset_index(drop=True)
 
+    # # show dataset distribution
+    # ! showDataset(annotationDf)
+
+    # split into train and test
+    trainAnnotationDf, testAnnotationDf = train_test_split(
+        annotationDf, test_size=0.2, random_state=42)
+    trainAnnotationDf = trainAnnotationDf.reset_index(drop=True)
+    testAnnotationDf = testAnnotationDf.reset_index(drop=True)
+
+    # get the cropped images
+    trainImages, trainLabels = imagesCrop(trainAnnotationDf)
+    testImages, testLabels = imagesCrop(testAnnotationDf)
+
+    # show some images
+    showRandomImages(trainImages, trainLabels)
+
     # recreate labels using openCV and
-    selfSupravisedLables = relabelImages(annotationDf)
+    selfSupravisedTrainLables = relabelImages(trainImages)
+    selfSupravisedTestLables = relabelImages(testImages)
 
     # compare with original labels
-    compareLabels(selfSupravisedLables, annotationDf['target'])
+    compareLabels(trainLabels, selfSupravisedTrainLables)
+    compareLabels(testLabels, selfSupravisedTestLables)
 
-    # show dataset distribution
-    showDataset(annotationDf)
-
-    # # split into train and test
-    # trainAnnotationDf, testAnnotationDf = train_test_split(
-    #     annotationDf, test_size=0.2, random_state=42)
-    # trainAnnotationDf = trainAnnotationDf.reset_index(drop=True)
-    # testAnnotationDf = testAnnotationDf.reset_index(drop=True)
-
-    # # show dataset distribution
-    # #! showDataset(trainAnnotationDf)
-    # #! showDataset(testAnnotationDf)
-
-    # # get the cropped images
-    # trainImages = imagesCrop(trainAnnotationDf)
-    # testImages = imagesCrop(testAnnotationDf)
-
-    # # Show some images
-    # # for i in range(20):
-    # #     showRandomImage(trainImages)
-
-    # # create Yolo5 model
+    # create Yolo5 model
