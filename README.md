@@ -37,7 +37,27 @@ Total: 1484 images
 ```
 
 # Self Supervised Data Labeling
-I created a method...
+I created a method to self label the traffic lights to "go", "stop", and "warning". This method creates three masks for each image (red, yellow, green). Then it calculates the probability of each label using weights and cutoffs.
+For the LISA dataset, the results were:
+```
+
+```
+```
+
+```
+### Example of good results:
+
+### Example of bad results:
+
+
+For the MIT dataset, the results were:
+```
+
+```
+### Example of good results:
+
+### Example of bad results:
+
 
 # YoloX
 
@@ -47,12 +67,17 @@ I created a method...
 ### Imports:
 ```python
 import os
-import re
 import cv2
 import numpy as np
+import pickle
+import multiprocessing as mp
+import re
 import pandas as pd
 import matplotlib.pyplot as plt
+import logging
 import progressbar
+
+from sklearn.model_selection import train_test_split
 from sklearn.utils import resample
 ```
 ### File Architecture:
