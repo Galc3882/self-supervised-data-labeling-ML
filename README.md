@@ -40,10 +40,14 @@ Total: 1484 images
 I created a method to self label the traffic lights to "go", "stop", and "warning". This method creates three masks for each image (red, yellow, green). Then it calculates the probability of each label using weights and cutoffs.
 For the LISA dataset, the results were:
 ```
-
+Training set:
+Correct:  74096 / 74955  Accuracy: 98.85 %
+Will stop when supposed to go accuracy: 1.02%  Go incorrect: 0.12%
 ```
 ```
-
+Testing set:
+Correct:  18536 / 18739  Accuracy: 98.92 %
+Will stop when supposed to go accuracy: 0.99%  Go incorrect: 0.10%
 ```
 ### Example of good results:
 
@@ -52,7 +56,8 @@ For the LISA dataset, the results were:
 
 For the MIT dataset, the results were:
 ```
-
+Correct:  1408 / 1484  Accuracy: 94.88 %
+Will stop when supposed to go accuracy: 3.84%  Go incorrect: 1.28%
 ```
 ### Example of good results:
 
@@ -121,3 +126,5 @@ sdz
 - [ ] Improve the model's accuracy.
 - [ ] Move preprocessing to the GPU.
 - [ ] Add more self supervised data labeling methods.
+  - [ ] [Scikit-learn classifier comparison](https://scikit-learn.org/stable/auto_examples/classification/plot_classifier_comparison.html#sphx-glr-auto-examples-classification-plot-classifier-comparison-py)
+  - [ ] [Scikit-learn Comparison of Calibration of Classifiers](https://scikit-learn.org/stable/auto_examples/calibration/plot_compare_calibration.html#sphx-glr-auto-examples-calibration-plot-compare-calibration-py)
