@@ -5,9 +5,30 @@ I completed the Intro to Deep Learning with PyTorch and Intro To Self Driving Ca
 
 ![k;j](https://user-images.githubusercontent.com/86870298/183752079-14f63e23-31ed-4200-aea0-d924909e9557.png)
 
-# Dataset
+# Datasets
 The dataset used for this project is the LISA Traffic Light Dataset. The database consists of continuous test and training video sequences, totaling 43,007 frames and 113,888 annotated traffic lights. The dataset is available for download at https://www.kaggle.com/datasets/mbornoe/lisa-traffic-light-dataset. 
 
+```
+go : 46707 images
+stop : 44318 images
+warning : 2669 images
+Percentage of: go : 49.85 %
+Percentage of: stop : 47.3 %
+Percentage of: warning : 2.85 %
+Total: 93694 images
+```
+
+I wanted to test the self-supervised data labeling and model on an entirely different dataset. I found the dataset from this [MIT self-driving car course](https://selfdrivingcars.mit.edu/).
+
+```
+go : 536 images
+stop : 904 images
+warning : 44 images
+Percentage of: go : 36.12 %
+Percentage of: stop : 60.92 %
+Percentage of: warning : 2.96 %
+Total: 1484 images
+```
 
 # Self Supervised Data Labeling
 I created a method...
@@ -20,14 +41,37 @@ I created a method...
 ### Imports:
 ```python
 import os
-import matplotlib.pyplot as plt
-import numpy as np
+import re
 import cv2
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import progressbar
+from sklearn.utils import resample
 ```
+### File Architecture:
+```
+├── README.md
+├── archive 
+│   ├── lisa-traffic-light-dataset
+│   ├── traffic_light_images
+├── dataset # contains the data used for training and testing after preprocessing
+│   ├── LISA_train_dataset
+│   ├── LISA_test_dataset
+│   ├── LISA_self_supravised_train_labels
+│   ├── LISA_self_supravised_test_labels
+│   ├── MIT_test_dataset
+├── preprocessing.py # contains the code for preprocessing the dataset
+├── train.py # contains the code for training the model
+├── self_supervised_data_labeling.py # contains the code for self supervised data labeling
+```
+
 ## Instructions:
-- Put all the pictures in the input folder. 
-- Run segmentation_mask.py.
-- Your segmentation masks will be in the folder named output.
+- Download the LISA Traffic Light Dataset from https://www.kaggle.com/datasets/mbornoe/lisa-traffic-light-dataset into the archive folder.
+- Download the images from this [MIT self-driving car course](https://selfdrivingcars.mit.edu/) into the archive folder.
+- run the preprocessing.py file to preprocess the dataset.
+- run the self_supervised_data_labeling.py file to generate the self supervised data labeling.
+- run the train.py file to train the model.
 
 # What does it do?
 asdsdasd
@@ -43,4 +87,6 @@ jkkj
 sdz
 
 ## Next steps:
-sdfs
+- [ ] Improve the model's accuracy.
+- [ ] Move preprocessing to the GPU.
+- [ ] Add more self supervised data labeling methods.
