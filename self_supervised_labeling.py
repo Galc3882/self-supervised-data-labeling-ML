@@ -1,7 +1,4 @@
 import pickle
-import random
-import sys
-from venv import create
 import progressbar
 import multiprocessing as mp
 import cv2
@@ -10,7 +7,7 @@ import matplotlib.pyplot as plt
 import logging
 
 
-def relabelImages(imgs):
+def relabelImages(imgs, func):
     """
     Relabel images to be used in training
     return a list of labels
@@ -21,7 +18,7 @@ def relabelImages(imgs):
 
     # multiprocessing to speed up the process of relabeling
     pool = mp.Pool()
-    labels = pool.imap(relabel, imgs)
+    labels = pool.imap(func, imgs)
 
     # wait for the process to finish
     pbar.start()
@@ -33,7 +30,7 @@ def relabelImages(imgs):
     return list(labels)
 
 
-def relabel(img, debug=False, args=None):
+def relabelOpenCV(img, debug=False, args=None):
     """
     give a label to an image
     """
@@ -42,20 +39,9 @@ def relabel(img, debug=False, args=None):
 
     # parameters for initial masks
     if args is None:
-        topRangeRed, topRangeYellow, bottomRangeYellow, bottomRangeGreen = (
-            16, 20, 31, 37)
+        topRangeRed, topRangeYellow, bottomRangeYellow, bottomRangeGreen = (15, 20, 35, 33)
     else:
         topRangeRed, topRangeYellow, bottomRangeYellow, bottomRangeGreen = args
-
-    # create numpy array of 255 only for certain rows and the rest are zeros
-    topMask = np.zeros((len(img), len(img[0])), dtype=np.uint8)
-    topMask[0:topRangeRed, :] = 255
-
-    middleMask = np.zeros((len(img), len(img[0])), dtype=np.uint8)
-    middleMask[topRangeYellow:bottomRangeYellow, :] = 255
-
-    bottomMask = np.zeros((len(img), len(img[0])), dtype=np.uint8)
-    bottomMask[bottomRangeGreen:, :] = 255
 
     # create three masks for each color (red, green, yellow)
     red_mask = cv2.bitwise_or(cv2.inRange(hsvImg, (0, 50, 50), (15, 255, 255)), cv2.inRange(
@@ -63,33 +49,11 @@ def relabel(img, debug=False, args=None):
     yellow_mask = cv2.inRange(hsvImg, (9, 80, 80), (45, 255, 255))
     green_mask = cv2.inRange(hsvImg, (45, 60, 60), (105, 255, 255))
 
-    # join the masks
-    red_mask = cv2.bitwise_and(red_mask, topMask)
-    yellow_mask = cv2.bitwise_and(yellow_mask, middleMask)
-    green_mask = cv2.bitwise_and(green_mask, bottomMask)
-
-    # # save only the biggest contour
-    # # red
-    # contours, _ = cv2.findContours(
-    #     red_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    # contours = sorted(contours, key=cv2.contourArea, reverse=True)
-    # if len(contours) > 0:
-    #     red_mask = np.zeros_like(red_mask)
-    #     cv2.drawContours(red_mask, [contours[0]], 0, 255, -1)
-    # # green
-    # contours, _ = cv2.findContours(
-    #     green_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    # contours = sorted(contours, key=cv2.contourArea, reverse=True)
-    # if len(contours) > 0:
-    #     green_mask = np.zeros_like(green_mask)
-    #     cv2.drawContours(green_mask, [contours[0]], 0, 255, -1)
-    # # yellow
-    # contours, _ = cv2.findContours(
-    #     yellow_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    # contours = sorted(contours, key=cv2.contourArea, reverse=True)
-    # if len(contours) > 0:
-    #     yellow_mask = np.zeros_like(yellow_mask)
-    #     cv2.drawContours(yellow_mask, [contours[0]], 0, 255, -1)
+    # remove the top and bottom parts of the image from the masks using cutoffs
+    red_mask[topRangeRed+1:, :] = 0
+    yellow_mask[:topRangeYellow, :] = 0
+    yellow_mask[bottomRangeYellow+1:, :] = 0
+    green_mask[:bottomRangeGreen, :] = 0
 
     if debug:
         # show masks with title and original image and hsv image
@@ -109,24 +73,27 @@ def relabel(img, debug=False, args=None):
 
         ax[2].imshow(red_mask, cmap='gray')
         ax[2].set_title('Red ' + str(np.sum(red_mask)))
-        ax[2].axis('off')
         ax[2].axis("tight")
         ax[2].axis("image")
+        ax[2].yaxis.set_major_locator(plt.FixedLocator([topRangeRed]))
+        ax[2].xaxis.set_major_locator(plt.NullLocator())
+
 
         ax[3].imshow(green_mask, cmap='gray')
         ax[3].set_title('Green ' + str(np.sum(green_mask)))
-        ax[3].axis('off')
         ax[3].axis("tight")
         ax[3].axis("image")
-
+        ax[3].yaxis.set_major_locator(plt.FixedLocator([bottomRangeGreen]))
+        ax[3].xaxis.set_major_locator(plt.NullLocator())
+        
         ax[4].imshow(yellow_mask, cmap='gray')
         ax[4].set_title('Yellow ' + str(np.sum(yellow_mask)))
-        ax[4].axis('off')
         ax[4].axis("tight")
         ax[4].axis("image")
+        ax[4].yaxis.set_major_locator(plt.FixedLocator([topRangeYellow, bottomRangeYellow]))
+        ax[4].xaxis.set_major_locator(plt.NullLocator())
 
         plt.show()
-        i = 0  # ! remove this line
 
     # check which mask has the most pixels and if red is at the top, yellow in the middle and green at the bottom
     if np.sum(green_mask) > np.sum(red_mask) and np.sum(green_mask) > np.sum(yellow_mask):
@@ -141,6 +108,10 @@ def evaluateParameters(imgs, labels):
     """
     evaluate best parameters for relabel function
     """
+    # create log
+    logging.basicConfig(filename='evaluateParamsLog.log', level=logging.DEBUG,
+                        format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+
     # best known parameters
     best = (16, 20, 31, 37)
     # best known score
@@ -164,7 +135,7 @@ def evaluateParameters(imgs, labels):
                         correct = 0
                         for index, img in enumerate(imgs):
                             # check if the label is correct
-                            if relabel(img, args=(topRangeRed, topRangeYellow, bottomRangeYellow, bottomRangeGreen)) == labels[index]:
+                            if relabelOpenCV(img, args=(topRangeRed, topRangeYellow, bottomRangeYellow, bottomRangeGreen)) == labels[index]:
                                 correct += 1
                             if correct + (len(imgs) - index) < bestScore:
                                 break
@@ -181,7 +152,7 @@ def evaluateParameters(imgs, labels):
     return newBest
 
 
-def compareLabels(recalculatedLabels, originalLabels, imgs, debug=False):
+def compareLabels(recalculatedLabels, originalLabels, imgs, func, debug=False):
     """
     Compare recalculated labels with original labels
     """
@@ -198,7 +169,7 @@ def compareLabels(recalculatedLabels, originalLabels, imgs, debug=False):
             if debug:
                 print("Correct label: ", target,
                       " Incorrect label: ", recalculatedLabels[i])
-                relabel(imgs[i], debug=True)
+                func(imgs[i], debug=True)
 
             if recalculatedLabels[i] == 'stop':
                 stopIncorrect += 1
@@ -214,12 +185,6 @@ def compareLabels(recalculatedLabels, originalLabels, imgs, debug=False):
 
 
 if __name__ == "__main__":
-    # ! cv2.cvtColor(np.uint8([[[255,255,255 ]]]),cv2.COLOR_RGB2HSV)
-
-    # create log
-    logging.basicConfig(filename='log.log', level=logging.DEBUG,
-                        format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
-
     # get pickled train data
     with open('dataset/LISA_train_dataset.pickle', 'rb') as f:
         trainImages, trainLabels = pickle.load(f)
@@ -236,17 +201,12 @@ if __name__ == "__main__":
         f.close()
 
     # evaluate best parameters
-    # print(evaluateParameters(trainImages, trainLabels))
+    # ! print(evaluateParameters(trainImages, trainLabels))
 
-    # recreate labels using openCV and
-    selfSupravisedTrainLables = relabelImages(trainImages)
-    selfSupravisedTestLables = relabelImages(testImages)
-    selfSupravisedMitLables = relabelImages(mitImages)
-
-    # compare with original labels
-    compareLabels(selfSupravisedTrainLables, trainLabels, trainImages)
-    compareLabels(selfSupravisedTestLables, testLabels, testImages)
-    compareLabels(selfSupravisedMitLables, mitLabels, mitImages)
+    # recreate labels using openCV
+    selfSupravisedTrainLables = relabelImages(trainImages, relabelOpenCV)
+    selfSupravisedTestLables = relabelImages(testImages, relabelOpenCV)
+    selfSupravisedMitLables = relabelImages(mitImages, relabelOpenCV)
 
     # save the new labels
     with open('dataset/selfSupravisedTrainLabels.pickle', 'wb') as f:
@@ -255,3 +215,8 @@ if __name__ == "__main__":
     with open('dataset/selfSupravisedTestLabels.pickle', 'wb') as f:
         pickle.dump(selfSupravisedTestLables, f)
         f.close()
+
+    # compare with original labels
+    compareLabels(selfSupravisedTrainLables, trainLabels, trainImages, relabelOpenCV)
+    compareLabels(selfSupravisedTestLables, testLabels, testImages, relabelOpenCV)
+    compareLabels(selfSupravisedMitLables, mitLabels, mitImages, relabelOpenCV)
