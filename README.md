@@ -8,6 +8,9 @@ I completed the Intro to Deep Learning with PyTorch and Intro To Self Driving Ca
 # Datasets
 The dataset used for this project is the LISA Traffic Light Dataset. The database consists of continuous test and training video sequences, totaling 43,007 frames and 113,888 annotated traffic lights. The dataset is available for download at https://www.kaggle.com/datasets/mbornoe/lisa-traffic-light-dataset. 
 
+![LISA dataset](https://user-images.githubusercontent.com/86870298/184504395-c65dced9-92f1-4dad-bdc2-cf92675b7653.png)
+![LISA sample](https://user-images.githubusercontent.com/86870298/184504404-dd80bb96-030d-47a7-ab9d-33d6b1c4467f.png)
+
 ```
 go : 46707 images
 stop : 44318 images
@@ -19,6 +22,9 @@ Total: 93694 images
 ```
 
 I wanted to test the self-supervised data labeling and model on an entirely different dataset. I found the dataset from this [MIT self-driving car course](https://selfdrivingcars.mit.edu/).
+
+![mit dataset](https://user-images.githubusercontent.com/86870298/184504406-36b44cdc-dbb3-4c9b-99f8-9671f52fda32.png)
+![mit sample](https://user-images.githubusercontent.com/86870298/184504407-227f7759-87f3-4dac-8320-7ee0a1e7592e.png)
 
 ```
 go : 536 images
