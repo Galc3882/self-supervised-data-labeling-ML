@@ -220,7 +220,7 @@ Loss of the network on the 1488 MIT images: 0.24
 Because the model has 152 layers, one epoch took 1:30 hours for the full dataset on the same GPU.
 
 ## Conclusion
-Generaly, the ResNet152 model performs better than the VGG16 model on the LISA dataset. The model is able to classify the traffic light images with an accuracy of above 99% for the LISA dataset and an accuracy of above 98% for the MIT dataset without ever being trained that dataset. 
+Generaly, the ResNet152 model performs better than the VGG16 model on the LISA dataset. The model is able to classify the traffic light images with an accuracy of above 99% for the LISA dataset and an accuracy of above 98% for the MIT dataset without ever being trained on that dataset. 
 
 ## Next steps:
 - [ ] Improve the model's accuracy by checking the bad detections and adjusting the model accordingly.
