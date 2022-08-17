@@ -1,5 +1,5 @@
 # Self Supervised Data Labeling ML
-A self-supervised data labeling ML YoloX with multi-GPU training and automatic hyperparameter tuning.
+Two self-supervised data labeling mechine learning models basded on the [VGG16 model](https://arxiv.org/abs/1409.1556) and [ResNet152](https://arxiv.org/abs/1512.03385) with multi-GPU training and automatic hyperparameter tuning that can be used for traffic light classification.
 # Introduction
 I completed the Intro to Deep Learning with PyTorch and Intro To Self Driving Cars Nanodegree by Udacity on August 9th, 2022. I had the opportunity to sharpen my Python skills and apply C++ while implementing matrices and calculus in code. Additionally, I was able to touch on computer vision and machine learning all in the context of solving self-driving car problems.
 
@@ -43,6 +43,18 @@ Total: 1484 images
 
 # Self Supervised Data Labeling
 I created a method to self label the traffic lights to "go", "stop", and "warning" using OpenCV masks. This method creates three masks for each image (red, yellow, green). Then it calculates the probability of each label using weights and cutoffs.
+The self_supervised_data_labeling.py generates the new labels for the images which can be used for training the model by loading that pickle file into the model in train.py.
+
+```python
+    # get pickled self supervised labels
+    with open('dataset/selfSupravisedTrainLabels.pickle', 'rb') as f:
+        selfSupravisedTrainLables = pickle.load(f)
+        f.close()
+    with open('dataset/selfSupravisedTestLabels.pickle', 'rb') as f:
+        selfSupravisedTestLables = pickle.load(f)
+        f.close()
+```
+
 ### LISA Traffic Light Dataset
 For the LISA dataset, the results were:
 ```
@@ -90,10 +102,26 @@ Light off | Grey
 Unreadable by humans        |  Low brightness
 ![mit green incorrect](https://user-images.githubusercontent.com/86870298/184511861-739b8cb1-3dd5-4c92-ba8a-11fb823eec61.png) | ![mit orange incorrect](https://user-images.githubusercontent.com/86870298/184511876-4531ae59-fb1f-4a78-9dce-879460043896.png)
 
-# YoloX
+# VGG16 Model
+The VGG16 neural network is a deep convolutional neural network that was developed by the Visual Geometry Group (VGG) at the University of Oxford. This neural network is 16 layers deep is widely used for image classification tasks and is often used as a baseline for other deep learning models. The model has been designed to extract features from images. The network is made up of 16 layers, 13 of which are convolutional layers. The final three layers are fully-connected layers. The model extracts features from the input images, which are then used to train a classifier on the images. I customized the model to extract features from the images and then use those features to train a classifier on smaller (30, 50) traffic light images.
+
+# ResNet152 Model
+The ResNet152 neural network is a convolutional neural network that is 152 layers deep. It was introduced in 2015 by Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun.
+
+The network is made up of a series of Residual Blocks, which are blocks that contain two convolutional layers and a shortcut connection. The shortcut connection allows the network to learn residual functions, which are small changes to the input that result in a desired output. The Residual Blocks are made up of two convolutional layers and a shortcut connection. The first convolutional layer has a kernel size of 3x3, the second convolutional layer has a kernel size of 1x1. The shortcut connection is a 1x1 convolutional layer that connects the input to the output of the first convolutional layer. The Residual Block is a simple way to add a residual connection to the network.
+
+The ResNet152 network is a powerful tool for image classification and other computer vision tasks. I customized the model to extract features from the images and then use those features to train a classifier on smaller (30, 50) traffic light images. 
 
 # Multi-GPU Training and Automatic Hyperparameter Tuning
-
+Everything is loaded to gpu memory and runs on the GPU. 
+### Examples:
+```python
+    ResNet(num_classes).to(device) # model on gpu
+    criterion = nn.CrossEntropyLoss().cuda(device) # loss function on gpu
+    # train on gpu
+    images = images.to(device)
+    labels = labels.to(device)
+```
 # Requirements and file architecture:
 ### Imports:
 ```python
@@ -110,6 +138,11 @@ import progressbar
 
 from sklearn.model_selection import train_test_split
 from sklearn.utils import resample
+
+import torch
+import torch.nn as nn
+from torchvision import transforms
+from torch.utils.data import Dataset, DataLoader
 ```
 ### File Architecture:
 ```
@@ -123,8 +156,10 @@ from sklearn.utils import resample
 │   ├── LISA_self_supravised_train_labels
 │   ├── LISA_self_supravised_test_labels
 │   ├── MIT_test_dataset
+├── model # contains the model checkpoints
 ├── preprocessing.py # contains the code for preprocessing the dataset
-├── train.py # contains the code for training the model
+├── train vgg.py # contains the code for training the VGG16 model
+├── train resnet.py # contains the code for training the ResNet152 model
 ├── self_supervised_data_labeling.py # contains the code for self supervised data labeling
 ```
 
@@ -133,20 +168,13 @@ from sklearn.utils import resample
 - Download the images from this [MIT self-driving car course](https://selfdrivingcars.mit.edu/) into the archive folder.
 - run the preprocessing.py file to preprocess the dataset.
 - run the self_supervised_data_labeling.py file to generate the self supervised data labeling.
-- run the train.py file to train the model.
+- run either train ___.py to train the model.
 
-# What does it do?
-asdsdasd
-
-## Example:
-
-![2_3 1](https://user-images.githubusercontent.com/86870298/180622921-41e9b082-9fb9-4ad9-a46e-7acd7e16bcc7.png)
-
-# Limitations and known bugs:
-jkkj
+# Results
+TODO: Add results
 
 ## Example of bad detection:
-sdz
+TODO: Add example of bad detection
 
 ## Next steps:
 - [ ] Improve the model's accuracy.

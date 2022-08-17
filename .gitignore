@@ -1,5 +1,6 @@
 archive/
 images/
+model/
 *.pyc
 *.pickle
 *.log
