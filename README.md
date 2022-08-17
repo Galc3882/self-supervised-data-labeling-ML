@@ -175,17 +175,55 @@ from torch.utils.data import Dataset, DataLoader
 
 ![loss_acc_vgg](https://user-images.githubusercontent.com/86870298/185158154-1a81a45e-fd0d-4662-a956-26c64be7194b.png)
 
+As you can see, the VGG16 model performed very well on the first epoch. The model was able to classify the traffic light images with an accuracy of above 99% for the LISA dataset and an accuracy of above 94% for the MIT dataset.
+```
+Epoch [1], Loss: 0.0695
+Accuracy of the network on the 18752 validation images: 99.65 %
+Loss of the network on the 18752 validation images: 0.0216
+Accuracy of the network on the 1488 MIT images: 94.20 %
+Loss of the network on the 1488 MIT images: 2.67
+```
+
+But after every epoch, the model was performing worse. It got overfitted to the training data.
+For example in the fourth epoch, the model was performing worse on the MIT dataset.
+```
+Epoch [4], Loss: 0.0188
+Accuracy of the network on the 18752 validation images: 99.83 %
+Loss of the network on the 18752 validation images: 0.00787
+Accuracy of the network on the 1488 MIT images: 88.2 %
+Loss of the network on the 1488 MIT images: 0.5
+```
+Because the model is only 16 layers deep, it took about 6 minutes per epoch to train the model on a NIDIA GTX 1650 Max Q GPU.
 
 ## ResNet152 Model
 
 ![loss_acc_resnet](https://user-images.githubusercontent.com/86870298/185158293-a5f67008-77c1-4211-9651-ed25dba9b994.png)
 
+As you can see, the ResNet152 model performed well on the first epoch. The model was able to classify the traffic light images with good accuracy for the LISA dataset and not a bad one for the MIT dataset.
+```
+Epoch [1], Loss: 0.1186
+Accuracy of the network on the 18744 validation images: 98.89 %
+Loss of the network on the 18744 validation images: 0.043
+Accuracy of the network on the 1488 MIT images: 82 %
+Loss of the network on the 1488 MIT images: 1.58
+```
 
-## Example of bad detection:
-TODO: Add example of bad detection
+After every epoch, the model was performing better and more accurate and generalized. The model was able to classify the traffic light images with an accuracy of above 99% for the LISA dataset and an accuracy of above 98% for the MIT dataset by the 6th epoch.
+```
+Epoch [6], Loss: 0.0082
+Accuracy of the network on the 18744 validation images: 99.69 %
+Loss of the network on the 18744 validation images: 0.0156
+Accuracy of the network on the 1488 MIT images: 98.72 %
+Loss of the network on the 1488 MIT images: 0.24
+```
+
+Because the model has 152 layers, one epoch took 1:30 hours for the full dataset on the same GPU.
+
+## Conclusion
+Generaly, the ResNet152 model performs better than the VGG16 model on the LISA dataset. The model is able to classify the traffic light images with an accuracy of above 99% for the LISA dataset and an accuracy of above 98% for the MIT dataset without ever being trained that dataset. 
 
 ## Next steps:
-- [ ] Improve the model's accuracy.
+- [ ] Improve the model's accuracy by checking the bad detections and adjusting the model accordingly.
 - [ ] Improve relabeling accuracy by taking exposure into account.
 - [ ] Move preprocessing to the GPU.
 - [ ] Add more self supervised data labeling methods.
