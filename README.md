@@ -166,12 +166,20 @@ from torch.utils.data import Dataset, DataLoader
 ## Instructions:
 - Download the LISA Traffic Light Dataset from https://www.kaggle.com/datasets/mbornoe/lisa-traffic-light-dataset into the archive folder.
 - Download the images from this [MIT self-driving car course](https://selfdrivingcars.mit.edu/) into the archive folder.
-- run the preprocessing.py file to preprocess the dataset.
-- run the self_supervised_data_labeling.py file to generate the self supervised data labeling.
-- run either train ___.py to train the model.
+- Run the preprocessing.py file to preprocess the dataset.
+- Run the self_supervised_data_labeling.py file to generate the self supervised data labeling.
+- Run either train ___.py to train the model.
 
 # Results
-TODO: Add results
+## VGG16 Model
+
+![loss_acc_vgg](https://user-images.githubusercontent.com/86870298/185158154-1a81a45e-fd0d-4662-a956-26c64be7194b.png)
+
+
+## ResNet152 Model
+
+![loss_acc_resnet](https://user-images.githubusercontent.com/86870298/185158293-a5f67008-77c1-4211-9651-ed25dba9b994.png)
+
 
 ## Example of bad detection:
 TODO: Add example of bad detection
