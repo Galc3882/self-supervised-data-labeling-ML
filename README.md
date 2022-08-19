@@ -1,5 +1,5 @@
 # Self Supervised Data Labeling ML
-Two self-supervised data labeling mechine learning models basded on the [VGG16 model](https://arxiv.org/abs/1409.1556) and [ResNet152](https://arxiv.org/abs/1512.03385) with multi-GPU training and automatic hyperparameter tuning that can be used for traffic light classification.
+Two self-supervised data labeling mechine learning models based on the [VGG16 model](https://arxiv.org/abs/1409.1556) and [ResNet152](https://arxiv.org/abs/1512.03385) with multi-GPU training and automatic hyperparameter tuning that can be used for traffic light classification.
 # Introduction
 I completed the Intro to Deep Learning with PyTorch and Intro To Self Driving Cars Nanodegree by Udacity on August 9th, 2022. I had the opportunity to sharpen my Python skills and apply C++ while implementing matrices and calculus in code. Additionally, I was able to touch on computer vision and machine learning all in the context of solving self-driving car problems.
 
@@ -175,7 +175,7 @@ from torch.utils.data import Dataset, DataLoader
 
 ![loss_acc_vgg](https://user-images.githubusercontent.com/86870298/185158154-1a81a45e-fd0d-4662-a956-26c64be7194b.png)
 
-As you can see, the VGG16 model performed very well on the first epoch. The model was able to classify the traffic light images with an accuracy of above 99% for the LISA dataset and an accuracy of above 94% for the MIT dataset.
+Evidently, the VGG16 model performed very well on the first epoch. The model was able to classify the traffic light images with an accuracy of above 99% for the LISA dataset and an accuracy of above 94% for the MIT dataset.
 ```
 Epoch [1], Loss: 0.0695
 Accuracy of the network on the 18752 validation images: 99.65 %
@@ -199,7 +199,7 @@ Because the model is only 16 layers deep, it took about 6 minutes per epoch to t
 
 ![loss_acc_resnet](https://user-images.githubusercontent.com/86870298/185158293-a5f67008-77c1-4211-9651-ed25dba9b994.png)
 
-As you can see, the ResNet152 model performed well on the first epoch. The model was able to classify the traffic light images with good accuracy for the LISA dataset and not a bad one for the MIT dataset.
+Evidently, the ResNet152 model performed well on the first epoch. The model was able to classify the traffic light images with good accuracy for the LISA dataset and not a bad one for the MIT dataset.
 ```
 Epoch [1], Loss: 0.1186
 Accuracy of the network on the 18744 validation images: 98.89 %
